@@ -123,6 +123,9 @@ class Bot(discord.Client):
                 if obj.use(player):
                     response = f"Moved to {obj.target.name}"
 
+        elif cmd == "inventory":
+            response = player.inventory()
+
         if response:
             await send(response)
 

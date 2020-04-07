@@ -88,8 +88,10 @@ class Player(ActiveMUDObject):
         return description
 
     def inventory(self):
+        description = ""
         for obj in self.contents:
-            print(obj.name, obj.description)
+            description += f"{obj.name} - {obj.description}"
+        return description
 
     def dig(self, world, room, doorname, newroomname):
         if isinstance(newroomname, Room):
