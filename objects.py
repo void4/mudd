@@ -16,10 +16,14 @@ def dprint(*args, **kwargs):
         else:
             print(*args, kwargs)
 
+OBJMAP = {}
+
 class MUDObject:
     def __init__(self, *args, **kwargs):
+
         self.id = nextid()
         self.sid = "#" + str(self.id)
+        OBJMAP[self.id] = self
         dprint(f"Created object #{self.id}")
 
         self.key = None#Key(self.id)
@@ -90,8 +94,8 @@ class Player(ActiveMUDObject):
         door = Door(name=doorname, target=newroom, location=room)
         self.location.put(door)
 
-def new_player(name):
-    return Player(name=name, location=initialroom)
+def new_player(name, location):
+    return Player(name=name, location=location)
 
 def all_objects(root):
     objects = []
@@ -112,7 +116,7 @@ if __name__ == "__main__":
 
     initialroom = Room(name="The initial room", description="This is all there is right now", location=world)
 
-    player = new_player("coda")
+    player = new_player("coda", initialroom)
 
     player.dig(world, initialroom, "Gate", "Third room")
 
