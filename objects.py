@@ -16,9 +16,15 @@ def dprint(*args, **kwargs):
         else:
             print(*args, kwargs)
 
+# The object map makes querying objects by ID more efficient.
+# It is rebuild with recreate_objmap whenever the world is loaded.
 OBJMAP = {}
 
 class MUDObject:
+    """
+    Every object in the MUD is derived from this class.
+    Each has a unique ID, displayed as #<ID>
+    """
     def __init__(self, *args, **kwargs):
 
         self.id = nextid()
@@ -54,6 +60,9 @@ class MUDObject:
         self.contents.add(object)
 
 class ActiveMUDObject(MUDObject):
+    """
+    Active Objects have methods that can be called
+    """
     def __init__(self, *args, **kwargs):
         self.methods = {}
         super().__init__(self, *args, **kwargs)
@@ -63,9 +72,15 @@ class ActiveMUDObject(MUDObject):
         vm.execute(name, args)
 
 class Room(ActiveMUDObject):
+    """
+    Rooms subdivide space. They are connected by doors.
+    """
     pass
 
 class Door(ActiveMUDObject):
+    """
+    Doors connect rooms.
+    """
 
     def init(self, *args, **kwargs):
         self.target = kwargs["target"]
@@ -75,6 +90,9 @@ class Door(ActiveMUDObject):
         return True
 
 class Player(ActiveMUDObject):
+    """
+    Each player controls a Player object. Its contents are its inventory.
+    """
 
     def look(self):
 
@@ -122,6 +140,13 @@ def recreate_objmap(world):
         OBJMAP[obj.id] = obj
 
 def get_obj(q, player=None, world=None, globl=False):
+    """
+    Gets an object by
+    integer id or #id string
+    by name through local or global search
+    or just returns it if it is already one
+    """
+
     if isinstance(q, int):
         return OBJMAP[q]
     elif isinstance(q, str) and q.startswith("#"):
@@ -157,7 +182,7 @@ if __name__ == "__main__":
     player.dig(world, world, "Gate", "Third room")
 
     print(player.look())
-    player.inventory()
+    print(player.inventory())
 
     print(where(world))
 
