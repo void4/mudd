@@ -19,6 +19,7 @@ def dprint(*args, **kwargs):
 class MUDObject:
     def __init__(self, *args, **kwargs):
         self.id = nextid()
+        self.sid = "#" + str(self.id)
         dprint(f"Created object #{self.id}")
 
         self.key = None#Key(self.id)
@@ -84,9 +85,9 @@ class Player(ActiveMUDObject):
         for obj in self.contents:
             print(obj.name, obj.description)
 
-    def dig(self, world, doorname, roomname):
-        newroom = Room(name=roomname, location=world)
-        door = Door(name=doorname, target=newroom)
+    def dig(self, world, room, doorname, newroomname):
+        newroom = Room(name=newroomname, location=world)
+        door = Door(name=doorname, target=newroom, location=room)
         self.location.put(door)
 
 def new_player(name):
@@ -101,21 +102,24 @@ def all_objects(root):
         queue += obj.contents
     return objects
 
+def where(world):
+    for obj in all_objects(world):
+        if isinstance(obj, Player):
+            print(f"{obj.name} ({obj.sid})\t{obj.location.name} ({obj.location.sid})")
+
 if __name__ == "__main__":
     world = World()
 
     initialroom = Room(name="The initial room", description="This is all there is right now", location=world)
 
-    secondroom = Room(name="The Second Room", description="This is all there is right now", location=world)
-
-    door = Door(name="Door", description="A nondescript door", location=initialroom, target=secondroom)
-
     player = new_player("coda")
 
-    player.dig(world, "Gate", "Third room")
+    player.dig(world, initialroom, "Gate", "Third room")
 
     player.look()
     player.inventory()
+
+    where(world)
 
     #print(world.contents)
 
