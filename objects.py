@@ -80,10 +80,14 @@ class Player(ActiveMUDObject):
 
     def look(self):
 
-        print(self.location.name, self.location.description)
+        description = f"{self.location.name} - {self.location.description}\n"
 
         for obj in self.location.contents:
-            print(obj.name, obj.description)
+            description += f"{obj.name} - {obj.description}\n"
+
+        description = description[:-1]
+
+        return description
 
     def inventory(self):
         for obj in self.contents:
@@ -105,6 +109,19 @@ def all_objects(root):
         objects.append(obj)
         queue += obj.contents
     return objects
+
+def recreate_objmap(world):
+    global OBJMAP
+    for obj in all_objects(world):
+        OBJMAP[obj.id] = obj
+
+def idorobj(q):
+    if isinstance(q, int):
+        return OBJMAP[q]
+    elif isinstance(q, str) and q.startswith("#"):
+        return OBJMAP[int(q[1:])]
+    else:
+        return q
 
 def where(world):
     for obj in all_objects(world):

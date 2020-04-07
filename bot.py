@@ -28,6 +28,7 @@ def load_or_create_db(path):
     if os.path.exists(path):
         print("Loading database:", path)
         idplayermap, world = pickle.loads(open(path, "rb").read())
+        recreate_objmap(world)
     else:
         world = World()
         print("Creating new database")
@@ -35,6 +36,7 @@ def load_or_create_db(path):
 def save_db(path):
     print("Saving database:", path)
     with open(path, "wb+") as dbfile:
+        # TODO zlib compress
         dbfile.write(pickle.dumps([idplayermap, world]))
 
 load_or_create_db(namespace.dbpath)
@@ -72,23 +74,42 @@ class Bot(discord.Client):
         if message.author == self.user:
             return
 
+        async def send(msg):
+            await message.channel.send(msg)
+
+        player = None
+
         if message.author.id not in connections:
-            await message.channel.send("Reconnecting...")
+            await send("Reconnecting...")
 
             # Save the Discord channel so we can use it for broadcasts
             connections[message.author.id] = message.channel
 
             # Create Player if they do not exist
             if message.author.id not in idplayermap:
-                await message.channel.send("First login, creating player...")
+                await send("First login, creating player...")
                 player = create_player(message.author.id, str(message.author))
-                await message.channel.send("Player created, welcome!")
+                await send("Player created, welcome!")
+            else:
+                player = get_player(message.author.id)
 
-            await message.channel.send("Logged in!")
+            await send("Logged in!")
         else:
             player = get_player(message.author.id)
 
-        await message.channel.send("pong")
+        cmd = message.content
+        cmd = cmd.strip()
+
+        response = None
+
+        if cmd == "look":
+            response = player.look()
+
+        elif cmd == "dig":
+            response = "Dug a room!"
+
+        if response:
+            await send(response)
 
 bot = Bot()
 output_task.start()
