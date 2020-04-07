@@ -29,7 +29,7 @@ class MUDObject:
         self.location = None
         self.move(kwargs.get("location"))
 
-        self.contents = kwargs.get("contents", [])
+        self.contents = kwargs.get("contents", set())
 
         if hasattr(self, "init"):
             self.init(*args, **kwargs)
@@ -43,7 +43,10 @@ class MUDObject:
         self.location = newlocation
 
         if newlocation is not None:
-            newlocation.contents.append(self)
+            newlocation.contents.add(self)
+
+    def put(self, object):
+        self.contents.add(object)
 
 class ActiveMUDObject(MUDObject):
     def __init__(self, *args, **kwargs):
@@ -57,7 +60,16 @@ class ActiveMUDObject(MUDObject):
 class World(ActiveMUDObject):
     pass
 
-world = World()
+class Room(ActiveMUDObject):
+    pass
+
+class Door(ActiveMUDObject):
+
+    def init(self, *args, **kwargs):
+        self.target = kwargs["target"]
+
+    def use(self, player):
+        player.move(self.target)
 
 class Player(ActiveMUDObject):
 
@@ -72,35 +84,15 @@ class Player(ActiveMUDObject):
         for obj in self.contents:
             print(obj.name, obj.description)
 
-class Room(ActiveMUDObject):
-    pass
-
-class Door(ActiveMUDObject):
-
-    def init(self, *args, **kwargs):
-        self.target = kwargs["target"]
-
-    def use(self, player):
-        player.move(self.target)
-
-initialroom = Room(name="The initial room", description="This is all there is right now", location=world)
-
-secondroom = Room(name="The Second Room", description="This is all there is right now", location=world)
-
-
-door = Door(name="Door", description="A nondescript door", location=initialroom, target=secondroom)
+    def dig(self, world, doorname, roomname):
+        newroom = Room(name=roomname, location=world)
+        door = Door(name=doorname, target=newroom)
+        self.location.put(door)
 
 def new_player(name):
     return Player(name=name, location=initialroom)
 
-player = new_player("coda")
-
-player.look()
-player.inventory()
-
-#print(world.contents)
-
-def all_objects(root=world):
+def all_objects(root):
     objects = []
     queue = [root]
     while len(queue) > 0:
@@ -109,8 +101,26 @@ def all_objects(root=world):
         queue += obj.contents
     return objects
 
-#print(all_objects())
+if __name__ == "__main__":
+    world = World()
 
-import pickle
-image = pickle.dumps(world)
-#print(image)
+    initialroom = Room(name="The initial room", description="This is all there is right now", location=world)
+
+    secondroom = Room(name="The Second Room", description="This is all there is right now", location=world)
+
+    door = Door(name="Door", description="A nondescript door", location=initialroom, target=secondroom)
+
+    player = new_player("coda")
+
+    player.dig(world, "Gate", "Third room")
+
+    player.look()
+    player.inventory()
+
+    #print(world.contents)
+
+    #print(all_objects(world))
+
+    import pickle
+    image = pickle.dumps(world)
+    #print(image)
