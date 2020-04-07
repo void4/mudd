@@ -63,19 +63,11 @@ Now that the server is running, start the bot with
 
 Your bot should now be online on your server
 
-#### Making yourself or others a wizard
+Use `python bot.py --help` to see advanced options.
 
-Only wizards can create, change or destroy objects.
+#### Ingame commands
 
-Every object in the MUD, including players has an id, which looks like this: `#96`
-
-DM your bot and find out the players id with
-
-`@who`
-
-Then type
-
-`/makewiz <number>` (for example `/makewiz 96`)
+See [USAGE.md](USAGE.md)
 
 ### Notes
 
