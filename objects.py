@@ -23,7 +23,8 @@ class MUDObject:
 
         self.key = None#Key(self.id)
 
-        self.name = kwargs.get("name")
+        self.name = kwargs.get("name", "???")
+        self.description = kwargs.get("description", "")
 
         self.location = None
         self.move(kwargs.get("location"))
@@ -59,14 +60,45 @@ class World(ActiveMUDObject):
 world = World()
 
 class Player(ActiveMUDObject):
+
+    def look(self):
+
+        print(self.location.name, self.location.description)
+
+        for obj in self.location.contents:
+            print(obj.name, obj.description)
+
+    def inventory(self):
+        for obj in self.contents:
+            print(obj.name, obj.description)
+
+class Room(ActiveMUDObject):
     pass
 
+class Door(ActiveMUDObject):
+
+    def init(self, *args, **kwargs):
+        self.target = kwargs["target"]
+
+    def use(self, player):
+        player.move(self.target)
+
+initialroom = Room(name="The initial room", description="This is all there is right now", location=world)
+
+secondroom = Room(name="The Second Room", description="This is all there is right now", location=world)
+
+
+door = Door(name="Door", description="A nondescript door", location=initialroom, target=secondroom)
+
 def new_player(name):
-    return Player(name=name, location=world)
+    return Player(name=name, location=initialroom)
 
-new_player("coda")
+player = new_player("coda")
 
-print(world.contents)
+player.look()
+player.inventory()
+
+#print(world.contents)
 
 def all_objects(root=world):
     objects = []
@@ -77,4 +109,8 @@ def all_objects(root=world):
         queue += obj.contents
     return objects
 
-print(all_objects())
+#print(all_objects())
+
+import pickle
+image = pickle.dumps(world)
+#print(image)
