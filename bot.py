@@ -30,7 +30,7 @@ def load_or_create_db(path):
         idplayermap, world = pickle.loads(open(path, "rb").read())
         recreate_objmap(world)
     else:
-        world = World()
+        world = Room(name="The Ether", description="This is all there is right now", location=world)
         print("Creating new database")
 
 def save_db(path):
@@ -43,11 +43,8 @@ load_or_create_db(namespace.dbpath)
 
 @loop(seconds=1)
 async def output_task():
-    for uid, meta in connections.items():
-        tn, channel = meta
-        data = tn.read_very_eager()
-        if data:
-            await channel.send(escape(data))
+    for uid, channel in connections.items():
+        pass
 
     print(".", end="")
 
@@ -105,8 +102,25 @@ class Bot(discord.Client):
         if cmd == "look":
             response = player.look()
 
-        elif cmd == "dig":
+        elif cmd.startswith("dig "):
+            cmd = cmd.split()
+            target = get_obj(cmd[2], player, world, True)
+            if target is None:
+                target = cmd[2]
+                print("not found, new room")
+            player.dig(world, player.location, cmd[1], target)
             response = "Dug a room!"
+
+        elif cmd == "where":
+            response = where(world)
+
+        elif cmd.startswith("go "):
+            cmd = cmd.split()
+            obj = get_obj(cmd[1], player)
+
+            if isinstance(obj, Door):
+                if obj.use(player):
+                    response = f"Moved to {obj.target.name}"
 
         if response:
             await send(response)

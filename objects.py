@@ -62,9 +62,6 @@ class ActiveMUDObject(MUDObject):
         method = self.methods.get(name)
         vm.execute(name, args)
 
-class World(ActiveMUDObject):
-    pass
-
 class Room(ActiveMUDObject):
     pass
 
@@ -75,6 +72,7 @@ class Door(ActiveMUDObject):
 
     def use(self, player):
         player.move(self.target)
+        return True
 
 class Player(ActiveMUDObject):
 
@@ -94,7 +92,10 @@ class Player(ActiveMUDObject):
             print(obj.name, obj.description)
 
     def dig(self, world, room, doorname, newroomname):
-        newroom = Room(name=newroomname, location=world)
+        if isinstance(newroomname, Room):
+            newroom = newroomname
+        else:
+            newroom = Room(name=newroomname, location=world)
         door = Door(name=doorname, target=newroom, location=room)
         self.location.put(door)
 
@@ -102,6 +103,9 @@ def new_player(name, location):
     return Player(name=name, location=location)
 
 def all_objects(root):
+    if root is None:
+        return []
+
     objects = []
     queue = [root]
     while len(queue) > 0:
@@ -115,32 +119,45 @@ def recreate_objmap(world):
     for obj in all_objects(world):
         OBJMAP[obj.id] = obj
 
-def idorobj(q):
+def get_obj(q, player=None, world=None, globl=False):
     if isinstance(q, int):
         return OBJMAP[q]
     elif isinstance(q, str) and q.startswith("#"):
         return OBJMAP[int(q[1:])]
-    else:
+    elif isinstance(q, str):
+        if globl:
+            for obj in all_objects(world):
+                if obj.name == q:
+                    return obj
+
+        if player is not None:
+            for obj in player.location.contents.union(player.contents):
+                if obj.name == q:
+                    return obj
+    elif isinstance(q, MUDObject):
         return q
 
 def where(world):
+    description = ""
     for obj in all_objects(world):
         if isinstance(obj, Player):
-            print(f"{obj.name} ({obj.sid})\t{obj.location.name} ({obj.location.sid})")
+            description += f"{obj.name} ({obj.sid})\t{obj.location.name} ({obj.location.sid})\n"
+
+    description = description[:-1]
+    return description
 
 if __name__ == "__main__":
-    world = World()
 
-    initialroom = Room(name="The initial room", description="This is all there is right now", location=world)
+    world = Room(name="The initial room", description="This is all there is right now", location=world)
 
-    player = new_player("coda", initialroom)
+    player = new_player("coda", world)
 
-    player.dig(world, initialroom, "Gate", "Third room")
+    player.dig(world, world, "Gate", "Third room")
 
-    player.look()
+    print(player.look())
     player.inventory()
 
-    where(world)
+    print(where(world))
 
     #print(world.contents)
 
