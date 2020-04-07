@@ -3,6 +3,7 @@ from configparser import ConfigParser
 import asyncio
 import os.path
 import pickle
+import zlib
 
 import discord
 from discord.abc import PrivateChannel
@@ -27,7 +28,7 @@ def load_or_create_db(path):
     global world, idplayermap
     if os.path.exists(path):
         print("Loading database:", path)
-        idplayermap, world = pickle.loads(open(path, "rb").read())
+        idplayermap, world = pickle.loads(zlib.decompress(open(path, "rb").read()))
         recreate_objmap(world)
     else:
         world = Room(name="The Ether", description="This is all there is right now", location=world)
@@ -37,7 +38,7 @@ def save_db(path):
     print("Saving database:", path)
     with open(path, "wb+") as dbfile:
         # TODO zlib compress
-        dbfile.write(pickle.dumps([idplayermap, world]))
+        dbfile.write(zlib.compress(pickle.dumps([idplayermap, world])))
 
 load_or_create_db(namespace.dbpath)
 
