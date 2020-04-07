@@ -1,3 +1,6 @@
+# Default object database
+database.pickle
+
 # Password config
 config.ini
 

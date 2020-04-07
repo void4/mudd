@@ -1,11 +1,14 @@
+from argparse import ArgumentParser
+from configparser import ConfigParser
 import asyncio
+import os.path
+import pickle
+
 import discord
 from discord.abc import PrivateChannel
 from discord.ext.tasks import loop
-from configparser import ConfigParser
 
 from objects import *
-import os.path
 
 config = ConfigParser()
 config.read("config.ini")[0]
@@ -16,22 +19,23 @@ idplayermap = {}
 
 connections = {}
 
-from argparse import ArgumentParser
-
 parser = ArgumentParser(description="Multi User Discord Dungeon")
 parser.add_argument("--dbpath", type=str, default="database.pickle", help="Path to database file")
 namespace = parser.parse_args()
 
-print("Loading/creating database:", namespace.dbpath)
-
-import pickle
-
 def load_or_create_db(path):
     global world, idplayermap
     if os.path.exists(path):
-        idplayermap, world = pickle.loads(open(path, "rb"))
+        print("Loading database:", path)
+        idplayermap, world = pickle.loads(open(path, "rb").read())
     else:
         world = World()
+        print("Creating new database")
+
+def save_db(path):
+    print("Saving database:", path)
+    with open(path, "wb+") as dbfile:
+        dbfile.write(pickle.dumps([idplayermap, world]))
 
 load_or_create_db(namespace.dbpath)
 
@@ -86,7 +90,13 @@ class Bot(discord.Client):
 
         await message.channel.send("pong")
 
-
 bot = Bot()
 output_task.start()
-bot.run(config["DISCORDTOKEN"])
+
+try:
+    bot.run(config["DISCORDTOKEN"])
+except TypeError as e:
+    print(e)
+print("Shutting down gracefully...")
+save_db(namespace.dbpath)
+print("Done.")
