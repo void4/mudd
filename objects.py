@@ -175,7 +175,7 @@ def where(world):
 
 if __name__ == "__main__":
 
-    world = Room(name="The initial room", description="This is all there is right now", location=world)
+    world = Room(name="The initial room", description="This is all there is right now", location=None)
 
     player = new_player("coda", world)
 
