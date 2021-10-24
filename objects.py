@@ -45,6 +45,9 @@ class MUDObject:
         if hasattr(self, "init"):
             self.init(*args, **kwargs)
 
+    def __str__(self):
+        return self.name + (f"- {self.description}" if self.description else "")
+
     # TODO __repr__ with name etc.
 
     def move(self, newlocation):
@@ -96,20 +99,20 @@ class Player(ActiveMUDObject):
 
     def look(self):
 
-        description = f"{self.location.name} - {self.location.description}\n"
+        description = f"I'm inside {self.location.name} - {self.location.description}\n"
 
         for obj in self.location.contents:
-            description += f"{obj.name} - {obj.description}\n"
+            description += f"{str(obj)}\n"
 
         description = description[:-1]
 
         return description
 
     def inventory(self):
-        description = ""
+        description = "I'm carrying:\n"
         for obj in self.contents:
-            description += f"{obj.name} - {obj.description}"
-        return description
+            description += f"{str(obj)}\n"
+        return description[:-1]
 
     def dig(self, world, room, doorname, newroomname):
         if isinstance(newroomname, Room):
@@ -118,6 +121,10 @@ class Player(ActiveMUDObject):
             newroom = Room(name=newroomname, location=world)
         door = Door(name=doorname, target=newroom, location=room)
         self.location.put(door)
+        return newroom
+
+    def create(self, world, objname):
+        obj = MUDObject(name=objname, location=self)
 
 def new_player(name, location):
     return Player(name=name, location=location)
@@ -181,6 +188,7 @@ if __name__ == "__main__":
 
     player.dig(world, world, "Gate", "Third room")
 
+    player.create(world, "stick")
     print(player.look())
     print(player.inventory())
 
