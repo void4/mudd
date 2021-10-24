@@ -78,6 +78,7 @@ class Room(ActiveMUDObject):
     """
     Rooms subdivide space. They are connected by doors.
     """
+    manacost = 100
     pass
 
 class Door(ActiveMUDObject):
@@ -97,6 +98,9 @@ class Player(ActiveMUDObject):
     Each player controls a Player object. Its contents are its inventory.
     """
 
+    def init(self, *args, **kwargs):
+        self.mana = 1000
+
     def look(self):
 
         description = f"I'm inside {self.location.name} - {self.location.description}\n"
@@ -115,6 +119,14 @@ class Player(ActiveMUDObject):
         return description[:-1]
 
     def dig(self, world, room, doorname, newroomname):
+
+        if self.mana < Room.manacost:
+            print("Not enough mana, need", Room.manacost, "have", self.mana)
+            return
+
+        # TODO can regain mana when closing room?
+        self.mana -= Room.manacost
+
         if isinstance(newroomname, Room):
             newroom = newroomname
         else:
@@ -180,6 +192,22 @@ def where(world):
     description = description[:-1]
     return description
 
+from pyvis.network import Network
+
+def visualize_content(root):
+    net = Network(width="100%", height="100%")
+
+    def recurse(node):
+        net.add_node(node.id, node.name)
+        for content in node.contents:
+            net.add_node(content.id, content.name)
+            net.add_edge(node.id, content.id)
+            recurse(content)
+
+    recurse(root)
+
+    net.show("content.html")
+
 if __name__ == "__main__":
 
     world = Room(name="The initial room", description="This is all there is right now", location=None)
@@ -201,3 +229,5 @@ if __name__ == "__main__":
     import pickle
     image = pickle.dumps(world)
     #print(image)
+
+    visualize_content(world)

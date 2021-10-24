@@ -78,7 +78,7 @@ class Bot(discord.Client):
         player = None
 
         if message.author.id not in connections:
-            await send("Reconnecting...")
+            #await send("Reconnecting...")
 
             # Save the Discord channel so we can use it for broadcasts
             connections[message.author.id] = message.channel
@@ -91,7 +91,7 @@ class Bot(discord.Client):
             else:
                 player = get_player(message.author.id)
 
-            await send("Logged in!")
+            #await send("Logged in!")
         else:
             player = get_player(message.author.id)
 
@@ -100,11 +100,13 @@ class Bot(discord.Client):
 
         response = None
 
-        if cmd == "look":
+        c = cmd.split()[0]
+        cmd = cmd.split()
+
+        if c in "look l".split():
             response = player.look()
 
-        elif cmd.startswith("dig "):
-            cmd = cmd.split()
+        elif c in "dig d".split():
             target = get_obj(cmd[2], player, world, True)
             if target is None:
                 target = cmd[2]
@@ -112,19 +114,24 @@ class Bot(discord.Client):
             player.dig(world, player.location, cmd[1], target)
             response = "Dug a room!"
 
-        elif cmd == "where":
+        elif c in "where w".split():
             response = where(world)
 
-        elif cmd.startswith("go "):
-            cmd = cmd.split()
+        elif c in "go g".split():
             obj = get_obj(cmd[1], player)
 
             if isinstance(obj, Door):
                 if obj.use(player):
                     response = f"Moved to {obj.target.name}"
 
-        elif cmd == "inventory":
+        elif c in "stats s".split():
+            response = f"I have {player.mana} mana\n"
+
+        elif c in "inventory i".split():
             response = player.inventory()
+
+        elif c in "create c".split():
+            player.create(world, cmd[1])
 
         if response:
             await send(response)
